@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue-mini-demo</title>
+    <style>
+      .wu {
+        color: #a9813d;
+      }
+    </style>
+    <script src="dist/umd/vue.js"></script>
+  </head>
+
+  <body>
+    <div id="app" style="color: red; font-size: 20px">
+      <span v-for="(item, index) in students" :key="item.id">
+        {{ item.name }}
+      </span>
+
+      <div>姓名：{{ name }}，嘿嘿</div>
+      <div>
+        我是纯文本
+        <span name="wdd">{{ age }}</span>
+      </div>
+    </div>
+
+    <script>
+      // 模板: render  >  template   >  html式模板
+      const vm = new Vue({
+        el: "#app",
+        data() {
+          return {
+            name: "文峰大道",
+            age: 34,
+            students: [
+              {
+                id: 1,
+                name: "小张2343",
+              },
+              {
+                id: 2,
+                name: "小王",
+              },
+            ],
+          };
+        },
+      });
+
+        
+    </script>
+  </body>
+</html>
