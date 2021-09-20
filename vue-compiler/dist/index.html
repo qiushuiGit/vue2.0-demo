@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Vue——编译</title>
+    <style>
+      .num {
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" style="color: #f66; font-size: 20px;">
+      函数字符串，{{ tip }} <span class="cla">{{ studentNum }}</span>
+    </div>
+    <script src="js/bundle.js"></script>
+    <script>
+      console.log(window);
+      const vm = new Vue({
+        el: '#app',
+        data() {
+          return {
+            tip: '搞定',
+            studentNum: 1,
+            subject: ['历史', '文化'],
+            bookInfo: {
+              name: '三国演义',
+              author: {
+                name: '罗贯中',
+                age: 18
+              }
+            },
+            studentList: [
+              {
+                id: 1,
+                name: '小明'
+              }
+            ]
+          };
+        }
+      });
+    </script>
+  </body>
+</html>
