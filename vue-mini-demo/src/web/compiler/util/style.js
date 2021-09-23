@@ -1,10 +1,11 @@
 import { cached } from '../../../shared/util';
 
-// DONE 创建一个解析 style 文本的函数。例如，"width: 100%;height: 50px;"
+// done: 创建一个解析 style 文本的函数。例如，"width: 100%;height: 50px;"
 export const parseStyleText = cached(function (cssText) {
   const res = {};
   const listDelimiter = /;(?![^(]*\))/g;
   const propertyDelimiter = /:(.+)/; // 匹配冒号
+  
   // 以分号进行分割
   cssText.split(listDelimiter).forEach(function (item) {
     if (item) {

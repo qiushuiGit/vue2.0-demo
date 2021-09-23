@@ -20,7 +20,17 @@
   }
 
   // done:: 是否存在 __proto__
-  const hasProto = ('__proto__' in {}); // done: 定义一个属性
+  const hasProto = ("__proto__" in {}); // done: 将连字符分隔的字符串驼峰化，例如：background-color --> backgroundColor
+
+  const camelizeRE = /-(\w)/g;
+  const camelize = cached(str => {
+    return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : "");
+  }); // done: 用连字符连接驼峰字符串
+
+  const hyphenateRE = /\B([A-Z])/g;
+  const hyphenate = cached(str => {
+    return str.replace(hyphenateRE, "-$1").toLowerCase();
+  }); // done: 定义一个属性
 
   function def(obj, key, val, enumerable) {
     Object.defineProperty(obj, key, {
@@ -32,7 +42,19 @@
   } // done: 对象检测
 
   function isObject(obj) {
-    return obj !== null && typeof obj === 'object';
+    return obj !== null && typeof obj === "object";
+  } // done: 将对象数组合并为单个对象
+
+  function toObject(arr) {
+    const res = {};
+
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i]) {
+        extend(res, arr[i]);
+      }
+    }
+
+    return res;
   } // done: 混合属性到目标对象中
 
   function extend(to, _from) {
@@ -51,9 +73,9 @@
     };
   } // done: 判断 Symbol 和 Reflect 是否都存在
 
-  const hasSymbol = typeof Symbol !== 'undefined' && isNative(Symbol) && typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys);
+  const hasSymbol = typeof Symbol !== "undefined" && isNative(Symbol) && typeof Reflect !== "undefined" && isNative(Reflect.ownKeys);
   function isNative(Ctor) {
-    return typeof Ctor === 'function' && /native code/.test(Ctor.toString());
+    return typeof Ctor === "function" && /native code/.test(Ctor.toString());
   } // done: 参数等于 undefined 或 null
 
   function isUndef(v) {
@@ -65,12 +87,12 @@
   } // done: 检查 value 是否为原始值
 
   function isPrimitive(value) {
-    return typeof value === 'string' || typeof value === 'number' || typeof value === 'symbol' || typeof value === 'boolean';
+    return typeof value === "string" || typeof value === "number" || typeof value === "symbol" || typeof value === "boolean";
   } // done: 制作一个映射，并返回一个函数来检查键是否在该映射中。
 
   function makeMap(str, expectsLowerCase) {
     const map = Object.create(null);
-    const list = str.split(',');
+    const list = str.split(",");
 
     for (let i = 0; i < list.length; i++) {
       map[list[i]] = true;
@@ -199,23 +221,7 @@
       }
     }
 
-  } // function Observer(val) {
-  //     if (Array.isArray(val)) {
-  //         // arrayMethods 中存储的是：重写的数组方法，例如：push、unshift 等。
-  //         // 重写为了在更改数组中的数据时，做出更多操作。比如，通过 push 方法向数组中新添数据时，
-  //         // 需要对新的数据进行观察，设置 getter/setter，否则它们将不能在后续的修改中做出反应。
-  //         // 实际上，重写的数组方法，其内部依旧使用数组的原生方法来实现数据的增、删。
-  //         val.__proto__ = arrayMethods; // 使用 __proto__ 拦截原型链来增加目标对象
-  //         observeArray(val); // 观察数组（Array）的每一项
-  //     } else {
-  //         this.walk(val); // 观察对象（Object --> {}）
-  //     }
-  // }
-  // export function observeArray(arr) {
-  //     for (let i = 0; i < arr.length; i++) {
-  //         observe(arr[i]); // 递归观察，arr[i]可能是一个对象
-  //     }
-  // }
+  }
 
   function defineReactive(data, key, value) {
     // 递归观察，value可能是一个对象
@@ -224,11 +230,11 @@
 
     Object.defineProperty(data, key, {
       get: function reactiveGetter() {
-        console.log('获取', value);
+        //   console.log('获取', value);
         return value;
       },
       set: function reactiveSetter(newValue) {
-        console.log('设置', newValue);
+        //   console.log('设置', newValue);
         if (newValue === value) return; // 同名属性，不需要重新赋值或观察
 
         observe(value); // 递归观察，value可能是一个对象
@@ -290,12 +296,11 @@
     vm._update(vm._render()); // 更新组件
 
   }
-
   function lifecycleMixin(Vue) {
     // 挂载 _update() 更新函数
     Vue.prototype._update = function (vnode) {
-      const vm = this; // console.log('_update--->执行', vm.$el, vnode);
-      // 将 vnode 虚拟节点生成相应的 HTML 元素
+      const vm = this;
+      console.log('_update--->执行', vm.$el, vnode); // 将 vnode 虚拟节点生成相应的 HTML 元素
 
       vm.__patch__(vm.$el, vnode);
     };
@@ -456,7 +461,7 @@
 
   // 注意: 这只是从数组 (attrsList) 中删除了属性，以便不被 processAttrs 处理。
   // 默认情况下，它不会从映射 (attrsMap) 中删除它，因为在代码生成期间需要映射。
-  // done: 获取并删除属性
+  // done: 获取并从 attrsList 数组中删除属性
   function getAndRemoveAttr(el, name, removeFromMap) {
     let val;
 
@@ -469,20 +474,21 @@
           break;
         }
       }
-    }
+    } // removeFromMap 为真，则从 attrsMap 中删除属性
+
 
     if (removeFromMap) {
       delete el.attrsMap[name];
     }
 
     return val;
-  } // DONE 获取绑定的属性
+  } // done: 获取绑定的属性
 
   function getBindingAttr(el, name, getStatic) {
     const dynamicValue = getAndRemoveAttr(el, ':' + name) || getAndRemoveAttr(el, 'v-bind:' + name); // 动态绑定属性，例如，v-bind:key = 'index' 或 :key = 'index'
 
     if (dynamicValue != null) {
-      // parseFilters(dynamicValue)
+      // return parseFilters(dynamicValue)
       return dynamicValue;
     } else if (getStatic !== false) {
       // 静态绑定属性，例如，ref = "nameRef"
@@ -658,23 +664,24 @@
     }
 
     return map;
-  } // DONE 处理 v-for 指令
+  } // done: 处理 v-for 指令
 
 
   function processFor(el) {
+    // 获取并从 attrsList 数组中删除属性
     const exp = getAndRemoveAttr(el, 'v-for'); // 判断 v-for 是否存在
 
     if (exp && typeof exp === 'string') {
       const res = parseFor(exp); // 解析 v-for 指令
 
       if (res) {
-        // 将 res中的属性（例如：item、arrList）添加到目标对象（el即ast对象）中
+        // 将 res 中的属性（例如：item、arrList）添加到目标对象（el即ast对象）中
         extend(el, res);
       } else {
         console.log(`Invalid v-for expression: ${exp}`);
       }
     }
-  } // DONE 解析 v-for 指令
+  } // done: 解析 v-for 指令
 
 
   function parseFor(exp) {
@@ -707,7 +714,7 @@
     }
 
     return res;
-  } // DONE 处理 ast 对象
+  } // done: 处理 ast 对象
 
 
   function processElement(element) {
@@ -723,7 +730,7 @@
     processAttrs(element); // 处理属性
 
     return element;
-  } // DONE 处理 key
+  } // done: 处理 key
 
 
   function processKey(el) {
@@ -782,7 +789,7 @@
       )`;
     }
   */
-  // DONE 生成配置状态对象
+  // DONE: 生成配置状态对象
 
   function codegenState(options) {
     return {
@@ -790,14 +797,15 @@
       // 获取 class 和 style 模块中的 genData函数，用于拼接 class 和 style 属性
       dataGenFns: pluckModuleFunction(options.modules, "genData")
     };
-  } // DONE 生成 code 代码字符串
+  } // DONE: 代码字符串生成器
 
 
   function generate(ast, options) {
-    const state = codegenState(options);
+    const state = codegenState(options); // 配置
+
     const code = ast ? ast.tag === "script" ? "null" : genElement(ast, state) : '_c("div")';
     return code;
-  } // DONE 生成 code 代码字符串
+  } // done: 处理元素，生成相应的字符串
 
   function genElement(el, state) {
     if (el.for && !el.forProcessed) {
@@ -817,18 +825,23 @@
     })`;
       return code;
     }
-  } // DONE 处理有 v-for 指令的 ast 对象
+  } // DONE: 处理有 v-for 指令的 ast 对象
 
 
   function genFor(el, state) {
-    const exp = el.for;
-    const alias = el.alias;
+    //   console.log('有v-for指令的元素对象--->', el);
+    const exp = el.for; // 要遍历的数组
+
+    const alias = el.alias; // 数组中的每一项
+    // 每一项的下标值即 index
+
     const iterator1 = el.iterator1 ? `,${el.iterator1}` : "";
     const iterator2 = el.iterator2 ? `,${el.iterator2}` : "";
     el.forProcessed = true; // 避免递归时，重复处理
+    // 生成字符串函数
 
     return `${"_l"}((${exp}),` + `function(${alias}${iterator1}${iterator2}){` + `return ${genElement(el, state)}` + "})";
-  } // DONE 处理 ast 对象中的各种属性
+  } // DONE: 处理 ast 对象中的各种属性，将它们拼接成字符串
 
 
   function genData$2(el, state) {
@@ -850,7 +863,7 @@
 
     data = data.replace(/,$/, "") + "}";
     return data;
-  } // DONE 处理子节点
+  } // DONE: 处理子节点
 
 
   function genChildren(el, state, checkSkip) {
@@ -860,7 +873,7 @@
       const normalizationType = checkSkip ? getNormalizationType(children, state.maybeComponent) : 0;
       return `[${children.map(c => genNode(c, state)).join(",")}]${normalizationType ? `,${normalizationType}` : ""}`;
     }
-  } // DONE 确定子数组需要的规范化。
+  } // DONE: 确定子数组需要的规范化。
   // 0:不需要标准化
   // 1:需要简单的规范化(可能是1级深嵌套数组)
   // 2:需要完全标准化
@@ -887,7 +900,7 @@
 
   function needsNormalization(el) {
     return el.for !== undefined || el.tag === "template" || el.tag === "slot";
-  } // DONE 将属性拼接成字符串
+  } // DONE: 将属性拼接成字符串
   // 例如：`style:{ "color":"#f66","font-size":"20px"}`
 
 
@@ -913,7 +926,7 @@
     } else {
       return staticProps;
     }
-  } // DONE 根据类型的不同进行相应处理
+  } // DONE: 根据类型的不同进行相应处理
 
 
   function genNode(node, state) {
@@ -924,7 +937,7 @@
       // 文本节点
       return genText(node);
     }
-  } // DONE 处理文本节点
+  } // DONE: 处理文本节点
 
 
   function genText(text) {
@@ -950,12 +963,13 @@
   }
 
   function transformNode$1(el) {
+    // 获取静态绑定的 class
     const staticClass = getAndRemoveAttr(el, 'class');
 
     if (staticClass) {
-      // console.log('这是静态class', staticClass);
       el.staticClass = JSON.stringify(staticClass);
-    }
+    } // 获取动态绑定的 class
+
 
     const classBinding = getBindingAttr(el, 'class', false
     /* getStatic */
@@ -987,7 +1001,7 @@
     genData: genData$1
   };
 
-  const parseStyleText = cached(function (cssText) {
+  const parseStyleText$1 = cached(function (cssText) {
     const res = {};
     const listDelimiter = /;(?![^(]*\))/g;
     const propertyDelimiter = /:(.+)/; // 匹配冒号
@@ -1004,11 +1018,13 @@
   });
 
   function transformNode(el) {
+    // 获取静态绑定的 style
     const staticStyle = getAndRemoveAttr(el, 'style');
 
     if (staticStyle) {
-      el.staticStyle = JSON.stringify(parseStyleText(staticStyle));
-    }
+      el.staticStyle = JSON.stringify(parseStyleText$1(staticStyle));
+    } // 获取动态绑定的 style
+
 
     const styleBinding = getBindingAttr(el, 'style', false
     /* getStatic */
@@ -1034,13 +1050,13 @@
     return data;
   }
 
-  var style = {
+  var style$1 = {
     staticKeys: ['staticStyle'],
     transformNode,
     genData
   };
 
-  var modules$1 = [klass$1, style];
+  var modules$1 = [klass$1, style$1];
 
   const baseOptions = {
     modules: modules$1
@@ -1170,7 +1186,8 @@
 
   const emptyNode = new VNode('', {}, []); // 创建空的虚拟节点对象
 
-  const hooks = ['create', 'activate', 'update', 'remove', 'destroy'];
+  const hooks = ['create', 'activate', 'update', 'remove', 'destroy']; // done: 创建 patch 函数
+
   function createPatchFunction(backend) {
     let i, j;
     const cbs = {}; // modules 对象中存储着处理 attrs、class 和 style等方法
@@ -1332,7 +1349,6 @@
         if (isRealElement) {
           // 创建空节点对象（初始化部分数据）
           oldVnode = emptyNodeAt(oldVnode);
-          console.log('是真实的元素，初始化oldVnode--->', oldVnode);
         } // 替换现有的 element
 
 
@@ -1413,53 +1429,64 @@
   function genClassForVnode(vnode) {
     let data = vnode.data;
     return renderClass(data.staticClass, data.class);
-  }
+  } // 提供拼接好的 class
+
   function renderClass(staticClass, dynamicClass) {
+    // 至少要有一个存在
     if (isDef(staticClass) || isDef(dynamicClass)) {
       return concat(staticClass, stringifyClass(dynamicClass));
     }
 
     return '';
-  }
+  } // 拼接 class
+
   function concat(a, b) {
     return a ? b ? a + ' ' + b : a : b || '';
-  }
+  } // 对 class 进行格式化
+
   function stringifyClass(value) {
+    // 数组语法，例如：v-bind:class="[activeClass, errorClass]"
     if (Array.isArray(value)) {
       return stringifyArray(value);
-    }
+    } // 对象语法，例如：v-bind:class="{ active: isActive, 'text-danger': hasError }"
+
 
     if (isObject(value)) {
       return stringifyObject(value);
-    }
+    } // 字符串
+
 
     if (typeof value === 'string') {
       return value;
     }
 
     return '';
-  }
+  } // class 数组绑定语法
 
   function stringifyArray(value) {
     let res = '';
     let stringified;
 
     for (let i = 0, l = value.length; i < l; i++) {
+      // 递归，遍历 value 数组中的每一项
       if (isDef(stringified = stringifyClass(value[i])) && stringified !== '') {
-        if (res) res += ' ';
+        if (res) res += ' '; // class 之间要有空格
+
         res += stringified;
       }
     }
 
     return res;
-  }
+  } // class 对象绑定语法
+
 
   function stringifyObject(value) {
     let res = '';
 
     for (const key in value) {
       if (value[key]) {
-        if (res) res += ' ';
+        if (res) res += ' '; // class 之间要有空格
+
         res += key;
       }
     }
@@ -1470,13 +1497,14 @@
   function updateClass(oldVnode, vnode) {
     const el = vnode.elm;
     const data = vnode.data;
-    const oldData = oldVnode.data;
+    const oldData = oldVnode.data; // 判断新旧节点是否有 staticClass 和 class
 
     if (isUndef(data.staticClass) && isUndef(data.class) && (isUndef(oldData) || isUndef(oldData.staticClass) && isUndef(oldData.class))) {
       return;
-    }
+    } // 获取 class 的值
 
-    let cls = genClassForVnode(vnode); // 设置 class
+
+    let cls = genClassForVnode(vnode); // 如果当前元素的 class 和其上一个设置的class 名相同，则不在重复设置
 
     if (cls !== el._prevClass) {
       el.setAttribute('class', cls);
@@ -1489,7 +1517,180 @@
     update: updateClass
   };
 
-  var platformModules = [attrs, klass];
+  const parseStyleText = cached(function (cssText) {
+    const res = {};
+    const listDelimiter = /;(?![^(]*\))/g; // 匹配分号
+
+    const propertyDelimiter = /:(.+)/; // 匹配冒号
+    // 以分号进行分割
+
+    cssText.split(listDelimiter).forEach(function (item) {
+      if (item) {
+        const tmp = item.split(propertyDelimiter); // 以冒号进行分割
+
+        tmp.length > 1 && (res[tmp[0].trim()] = tmp[1].trim());
+      }
+    });
+    return res;
+  }); // done: 合并同一个 vnode 的静态和动态 style
+
+  function normalizeStyleData(data) {
+    const style = normalizeStyleBinding(data.style); // 静态样式在编译期间被预处理为对象，并且始终是一个新对象，以便合并到其中是安全的
+
+    return data.staticStyle ? extend(data.staticStyle, style) : style;
+  } // done: 将可能的数组或字符串值规范化为 Object
+
+
+  function normalizeStyleBinding(bindingStyle) {
+    // 数组
+    if (Array.isArray(bindingStyle)) {
+      return toObject(bindingStyle); // 将对象数组合并为单个对象
+    } // 字符串
+
+
+    if (typeof bindingStyle === "string") {
+      return parseStyleText(bindingStyle); // 解析 style 字符串
+    }
+
+    return bindingStyle;
+  } // done: 获取 style 样式
+  // 父组件的样式应该在子组件的样式之后，以便父组件的样式可以覆盖它
+
+  function getStyle(vnode, checkChild) {
+    const res = {};
+    let styleData;
+
+    if (checkChild) {
+      // 为真，则检查子节点
+      let childNode = vnode; // 子节点是否为组件
+
+      while (childNode.componentInstance) {
+        childNode = childNode.componentInstance._vnode; // 子组件节点
+
+        if (childNode && childNode.data && (styleData = normalizeStyleData(childNode.data))) {
+          extend(res, styleData); // 混合属性到目标对象中
+        }
+      }
+    }
+
+    if (styleData = normalizeStyleData(vnode.data)) {
+      extend(res, styleData); // 混合属性到目标对象中
+    }
+
+    let parentNode = vnode; // 存在父节点
+
+    while (parentNode = parentNode.parent) {
+      if (parentNode.data && (styleData = normalizeStyleData(parentNode.data))) {
+        extend(res, styleData);
+      }
+    }
+
+    return res;
+  }
+
+  const cssVarRE = /^--/;
+  const importantRE = /\s*!important$/;
+
+  const setProp = (el, name, val) => {
+    // cssVarRE 是针对使用 了CSS 自定义属性（变量）的情况，例如：element { color: var(--bg-color);}
+    // 相关文档：https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties
+    if (cssVarRE.test(name)) {
+      el.style.setProperty(name, val);
+    } else if (importantRE.test(val)) {
+      // 设置属性的同时，规定其优先级为 'important'
+      el.style.setProperty(hyphenate(name), val.replace(importantRE, ""), "important");
+    } else {
+      const normalizedName = normalize(name); // 规范化 style 属性名
+
+      if (Array.isArray(val)) {
+        // style 绑定中的 property 提供一个包含多个值的数组，常用于提供多个带前缀的值，例如：
+        // <div :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"></div>
+        // 逐个设置，浏览器将只设置它能识别的。如果浏览器支持不带浏览器前缀的 flexbox，
+        // 那么就只会渲染 display: flex
+        for (let i = 0, len = val.length; i < len; i++) {
+          el.style[normalizedName] = val[i];
+        }
+      } else {
+        el.style[normalizedName] = val;
+      }
+    }
+  }; // -moz --> Firefox浏览器  -webkit --> Chrome 和 Safari浏览器  -ms --> IE浏览器
+
+
+  const vendorNames = ["Webkit", "Moz", "ms"];
+  let emptyStyle; // cached 用于创建一个纯函数的缓存
+
+  const normalize = cached(function (prop) {
+    // 获取 style（ CSSStyleDeclaration 样式声明对象 ）上的所有属性
+    emptyStyle = emptyStyle || document.createElement("div").style; // 将连字符分隔的字符串驼峰化，例如：background-color --> backgroundColor
+
+    prop = camelize(prop); // 不是 filter 且存在于 emptyStyle 中
+
+    if (prop !== "filter" && prop in emptyStyle) {
+      return prop;
+    } // 若是走到这，则说明是 filter
+
+
+    const capName = prop.charAt(0).toUpperCase() + prop.slice(1);
+
+    for (let i = 0; i < vendorNames.length; i++) {
+      // 拼接上各个浏览器的前缀，例如：WebkitFilter
+      const name = vendorNames[i] + capName; // 再次判断是否存在于 emptyStyle 中
+
+      if (name in emptyStyle) {
+        return name;
+      }
+    }
+  }); // done: 更新 style
+
+  function updateStyle(oldVnode, vnode) {
+    const data = vnode.data;
+    const oldData = oldVnode.data; // 判断新旧节点是否有 staticStyle 和 style
+
+    if (isUndef(data.staticStyle) && isUndef(data.style) && isUndef(oldData.staticStyle) && isUndef(oldData.style)) {
+      return;
+    }
+
+    let cur, name;
+    const el = vnode.elm;
+    const oldStaticStyle = oldData.staticStyle; // 旧的静态 style
+
+    const oldStyleBinding = oldData.normalizedStyle || oldData.style || {}; // 旧的动态 style
+    // 获取 style 的老样式
+
+    const oldStyle = oldStaticStyle || oldStyleBinding; // 规范化 style 样式
+
+    const style = normalizeStyleBinding(vnode.data.style) || {}; // 提示：__ob__ 指的是 Observe 类，可参考相关文件路径：src/core/observe/index.js
+    // 存储规范化样式在一个不同的键下，以便下一次 diff
+    // 如果它是响应性的（style.__ob__），请确保克隆它，因为用户可能想要改变它
+
+    vnode.data.normalizedStyle = isDef(style.__ob__) ? extend({}, style) : style; // 获取 style 样式
+
+    const newStyle = getStyle(vnode, true);
+
+    for (name in oldStyle) {
+      // 旧的样式属性在新样式中不存在，则设置 style 属性为空
+      if (isUndef(newStyle[name])) {
+        setProp(el, name, "");
+      }
+    }
+
+    for (name in newStyle) {
+      cur = newStyle[name]; // 新旧样式属性不重复，则设置 style 属性
+
+      if (cur !== oldStyle[name]) {
+        // Ie9设置为空没有效果，必须使用空字符串
+        setProp(el, name, cur == null ? "" : cur);
+      }
+    }
+  }
+
+  var style = {
+    create: updateStyle,
+    update: updateStyle
+  };
+
+  var platformModules = [attrs, klass, style];
 
   const modules = platformModules;
   const patch = createPatchFunction({

@@ -54,27 +54,6 @@ export class Observer {
     }
 }
 
-// function Observer(val) {
-
-//     if (Array.isArray(val)) {
-//         // arrayMethods 中存储的是：重写的数组方法，例如：push、unshift 等。
-//         // 重写为了在更改数组中的数据时，做出更多操作。比如，通过 push 方法向数组中新添数据时，
-//         // 需要对新的数据进行观察，设置 getter/setter，否则它们将不能在后续的修改中做出反应。
-//         // 实际上，重写的数组方法，其内部依旧使用数组的原生方法来实现数据的增、删。
-
-//         val.__proto__ = arrayMethods; // 使用 __proto__ 拦截原型链来增加目标对象
-//         observeArray(val); // 观察数组（Array）的每一项
-//     } else {
-//         this.walk(val); // 观察对象（Object --> {}）
-//     }
-// }
-
-// export function observeArray(arr) {
-//     for (let i = 0; i < arr.length; i++) {
-//         observe(arr[i]); // 递归观察，arr[i]可能是一个对象
-//     }
-// }
-
 function defineReactive(data, key, value) {
 
     // 递归观察，value可能是一个对象
@@ -84,11 +63,11 @@ function defineReactive(data, key, value) {
     // 它是实现数据劫持的关键所在。
     Object.defineProperty(data, key, {
         get: function reactiveGetter() {
-              console.log('获取', value);
+            //   console.log('获取', value);
             return value;
         },
         set: function reactiveSetter(newValue) {
-              console.log('设置', newValue);
+            //   console.log('设置', newValue);
             if (newValue === value) return; // 同名属性，不需要重新赋值或观察
             observe(value); // 递归观察，value可能是一个对象
             value = newValue;

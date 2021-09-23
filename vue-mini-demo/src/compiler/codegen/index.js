@@ -1,4 +1,4 @@
-import { pluckModuleFunction } from "../parser/helpers";
+import { pluckModuleFunction } from "../helpers";
 
 /* 
   以下三个个函数的作用：
@@ -21,7 +21,7 @@ import { pluckModuleFunction } from "../parser/helpers";
   }
 */
 
-// DONE 生成配置状态对象
+// DONE: 生成配置状态对象
 function codegenState(options) {
   return {
     options,
@@ -30,9 +30,9 @@ function codegenState(options) {
   };
 }
 
-// DONE 生成 code 代码字符串
+// DONE: 代码字符串生成器
 export function generate(ast, options) {
-  const state = codegenState(options);
+  const state = codegenState(options); // 配置
   const code = ast
     ? ast.tag === "script"
       ? "null"
@@ -42,7 +42,7 @@ export function generate(ast, options) {
   return code;
 }
 
-// DONE 生成 code 代码字符串
+// done: 处理元素，生成相应的字符串
 function genElement(el, state) {
   if (el.for && !el.forProcessed) {
     return genFor(el, state);
@@ -67,15 +67,19 @@ function genElement(el, state) {
   }
 }
 
-// DONE 处理有 v-for 指令的 ast 对象
+// DONE: 处理有 v-for 指令的 ast 对象
 function genFor(el, state) {
-  const exp = el.for;
-  const alias = el.alias;
+//   console.log('有v-for指令的元素对象--->', el);
+  const exp = el.for; // 要遍历的数组
+  const alias = el.alias; // 数组中的每一项
+
+  // 每一项的下标值即 index
   const iterator1 = el.iterator1 ? `,${el.iterator1}` : "";
   const iterator2 = el.iterator2 ? `,${el.iterator2}` : "";
 
   el.forProcessed = true; // 避免递归时，重复处理
 
+  // 生成字符串函数
   return (
     `${"_l"}((${exp}),` +
     `function(${alias}${iterator1}${iterator2}){` +
@@ -84,7 +88,7 @@ function genFor(el, state) {
   );
 }
 
-// DONE 处理 ast 对象中的各种属性
+// DONE: 处理 ast 对象中的各种属性，将它们拼接成字符串
 function genData(el, state) {
   let data = "{";
 
@@ -107,7 +111,7 @@ function genData(el, state) {
   return data;
 }
 
-// DONE 处理子节点
+// DONE: 处理子节点
 function genChildren(el, state, checkSkip) {
   const children = el.children;
   // 是否存在子节点
@@ -122,7 +126,7 @@ function genChildren(el, state, checkSkip) {
   }
 }
 
-// DONE 确定子数组需要的规范化。
+// DONE: 确定子数组需要的规范化。
 // 0:不需要标准化
 // 1:需要简单的规范化(可能是1级深嵌套数组)
 // 2:需要完全标准化
@@ -148,7 +152,7 @@ function needsNormalization(el) {
     return el.for !== undefined || el.tag === "template" || el.tag === "slot";
 }
 
-// DONE 将属性拼接成字符串
+// DONE: 将属性拼接成字符串
 // 例如：`style:{ "color":"#f66","font-size":"20px"}`
 function genProps(props) {
   let staticProps = ``;
@@ -172,7 +176,7 @@ function genProps(props) {
     return staticProps;
   }
 }
-// DONE 根据类型的不同进行相应处理
+// DONE: 根据类型的不同进行相应处理
 function genNode(node, state) {
   if (node.type === 1) {
     // 元素节点
@@ -183,7 +187,7 @@ function genNode(node, state) {
   }
 }
 
-// DONE 处理文本节点
+// DONE: 处理文本节点
 function genText(text) {
   // 在模板编译阶段，已通过 parseText 函数对文本进行了处理
   return `_v(${

@@ -1,7 +1,7 @@
 import { isDef, isObject, hasSymbol } from '../../../shared/util';
 
 
-// DONE 处理 v-for 指令中的 lists（即要遍历的数组、字符串、数字或对象）
+// done: 处理 v-for 指令中的 lists（即要遍历的数组、字符串、数字或对象）
 export function renderList(val, render) {
     var ret, i, l, keys, key;
     if (Array.isArray(val) || typeof val === "string") {

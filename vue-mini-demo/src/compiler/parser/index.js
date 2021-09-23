@@ -1,12 +1,12 @@
 import { parseText } from './text-parser';
 import { parseHTML } from './html-parser';
-import { addAttr } from './helpers';
+import { addAttr } from '../helpers';
 import { extend } from '../../shared/util';
 import {
     getAndRemoveAttr,
     getBindingAttr,
     pluckModuleFunction
-} from './helpers';
+} from '../helpers';
 
 // 匹配 v-for='(item,index) in arrList' 中的：'(item,index) in arrList'，这里仅是举例
 const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/;
@@ -146,21 +146,22 @@ function makeAttrsMap(attrs) {
     }
     return map;
 }
-// DONE 处理 v-for 指令
+// done: 处理 v-for 指令
 function processFor(el) {
+    // 获取并从 attrsList 数组中删除属性
     const exp = getAndRemoveAttr(el, 'v-for');
     // 判断 v-for 是否存在
     if (exp && typeof exp === 'string') {
         const res = parseFor(exp); // 解析 v-for 指令
         if (res) {
-            // 将 res中的属性（例如：item、arrList）添加到目标对象（el即ast对象）中
+            // 将 res 中的属性（例如：item、arrList）添加到目标对象（el即ast对象）中
             extend(el, res);
         } else {
             console.log(`Invalid v-for expression: ${exp}`);
         }
     }
 }
-// DONE 解析 v-for 指令
+// done: 解析 v-for 指令
 function parseFor(exp) {
     // 匹配 v-for='(item,index) in arrList' 中的：'(item,index) in arrList'，这里仅是举例
     const inMatch = exp.match(forAliasRE);
@@ -194,7 +195,7 @@ function parseFor(exp) {
     return res;
 }
 
-// DONE 处理 ast 对象
+// done: 处理 ast 对象
 function processElement(element) {
     // 处理 key
     processKey(element);
@@ -207,13 +208,13 @@ function processElement(element) {
     for (let i = 0; i < transforms.length; i++) {
         element = transforms[i](element) || element;
     }
-
+    
     processAttrs(element); // 处理属性
 
     return element;
 }
 
-// DONE 处理 key
+// done: 处理 key
 function processKey(el) {
     const exp = getBindingAttr(el, 'key');
 

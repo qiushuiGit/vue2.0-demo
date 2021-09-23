@@ -14,6 +14,7 @@ import VNode, { cloneVNode } from './vnode';
 export const emptyNode = new VNode('', {}, []); // 创建空的虚拟节点对象
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy'];
 
+// done: 创建 patch 函数
 export function createPatchFunction(backend) {
     let i, j;
     const cbs = {};
@@ -43,7 +44,6 @@ export function createPatchFunction(backend) {
         );
         return node;
     }
-
     // done: 调用 cbs.create 数组中函数(主要用于处理 class、style、指令等)
     function invokeCreateHooks(vnode, insertedVnodeQueue) {
         for (let i = 0; i < cbs.create.length; ++i) {
@@ -193,7 +193,6 @@ export function createPatchFunction(backend) {
             if (isRealElement) {
                 // 创建空节点对象（初始化部分数据）
                 oldVnode = emptyNodeAt(oldVnode);
-                console.log('是真实的元素，初始化oldVnode--->', oldVnode);
             }
 
             // 替换现有的 element
