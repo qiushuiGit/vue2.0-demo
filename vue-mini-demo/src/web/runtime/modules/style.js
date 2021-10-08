@@ -12,7 +12,7 @@ const cssVarRE = /^--/;
 const importantRE = /\s*!important$/;
 
 const setProp = (el, name, val) => {
-  // cssVarRE 是针对使用 了CSS 自定义属性（变量）的情况，例如：element { color: var(--bg-color);}
+  // cssVarRE 正则，是针对使用 了CSS 自定义属性（变量）的情况，例如：element { color: var(--bg-color);}
   // 相关文档：https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties
   if (cssVarRE.test(name)) {
     el.style.setProperty(name, val);

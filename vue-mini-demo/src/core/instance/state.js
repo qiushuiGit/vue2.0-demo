@@ -1,7 +1,8 @@
 import proxy from './proxy';
-import { observe } from '../observe/index';
+import { observe } from '../observer/index';
 
 function initState (vm) {
+  vm._watchers = []; // 监听者列表
   const options = vm.$options;
 
   if (options.data) {

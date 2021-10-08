@@ -1,16 +1,41 @@
+// done: 从数组中删除一个项
+export function remove(arr, item) {
+  if (arr.length) {
+    const index = arr.indexOf(item);
+    if (index > -1) {
+      return arr.splice(index, 1);
+    }
+  }
+}
+
+// done: 获取值的原始类型字符串，例如，[object object]。
+const _toString = Object.prototype.toString;
+
+// done: 严格的对象类型检查。
+// 仅对普通 JavaScript 对象返回 true。
+export function isPlainObject(obj) {
+  return _toString.call(obj) === '[object Object]';
+}
+
+// done: 检查对象是否具有该属性
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+export function hasOwn(obj, key) {
+  return hasOwnProperty.call(obj, key);
+}
+
 // done:: 是否存在 __proto__
-export const hasProto = "__proto__" in {};
+export const hasProto = '__proto__' in {};
 
 // done: 将连字符分隔的字符串驼峰化，例如：background-color --> backgroundColor
 const camelizeRE = /-(\w)/g;
 export const camelize = cached((str) => {
-  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ""));
+  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''));
 });
 
 // done: 用连字符连接驼峰字符串
 const hyphenateRE = /\B([A-Z])/g;
 export const hyphenate = cached((str) => {
-  return str.replace(hyphenateRE, "-$1").toLowerCase();
+  return str.replace(hyphenateRE, '-$1').toLowerCase();
 });
 
 // done: 定义一个属性
@@ -25,7 +50,7 @@ export function def(obj, key, val, enumerable) {
 
 // done: 对象检测
 export function isObject(obj) {
-  return obj !== null && typeof obj === "object";
+  return obj !== null && typeof obj === 'object';
 }
 
 // done: 将对象数组合并为单个对象
@@ -65,13 +90,14 @@ export function cached(fn) {
 
 // done: 判断 Symbol 和 Reflect 是否都存在
 export const hasSymbol =
-  typeof Symbol !== "undefined" &&
+  typeof Symbol !== 'undefined' &&
   isNative(Symbol) &&
-  typeof Reflect !== "undefined" &&
+  typeof Reflect !== 'undefined' &&
   isNative(Reflect.ownKeys);
 
+// done: native 代码实现的 built-in 函数 
 export function isNative(Ctor) {
-  return typeof Ctor === "function" && /native code/.test(Ctor.toString());
+  return typeof Ctor === 'function' && /native code/.test(Ctor.toString());
 }
 
 // done: 参数等于 undefined 或 null
@@ -87,17 +113,17 @@ export function isDef(v) {
 // done: 检查 value 是否为原始值
 export function isPrimitive(value) {
   return (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "symbol" ||
-    typeof value === "boolean"
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'symbol' ||
+    typeof value === 'boolean'
   );
 }
 
 // done: 制作一个映射，并返回一个函数来检查键是否在该映射中。
 export function makeMap(str, expectsLowerCase) {
   const map = Object.create(null);
-  const list = str.split(",");
+  const list = str.split(',');
 
   for (let i = 0; i < list.length; i++) {
     map[list[i]] = true;
@@ -105,11 +131,40 @@ export function makeMap(str, expectsLowerCase) {
 
   return expectsLowerCase ? (val) => map[val.toLowerCase()] : (val) => map[val];
 }
-
+// done: 真
 export function isTrue(v) {
   return v === true;
 }
-
+// done: 假
 export function isFalse(v) {
   return v === false;
 }
+
+/**
+  done: 在JavaScript中，您可以使用比函数预期更多的参数来调用函数。
+ (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+ */
+export function noop(a, b, c) {}
+
+// done: 错误提示
+export function warn(msg) {
+  console.error(`[Vue warn]: ${msg}`);
+}
+// done: 一个只适用于原始键的非标准Set polyfill
+export const _Set = (function () {
+  function Set() {
+    this.set = Object.create(null);
+  }
+  Set.prototype.has = function has(key) {
+    return this.set[key] === true;
+  };
+  Set.prototype.add = function add(key) {
+    this.set[key] = true;
+  };
+  Set.prototype.clear = function clear() {
+    this.set = Object.create(null);
+  };
+
+  return Set;
+})();
+

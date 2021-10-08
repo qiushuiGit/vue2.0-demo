@@ -19,17 +19,39 @@
     });
   }
 
-  // done:: 是否存在 __proto__
-  const hasProto = ("__proto__" in {}); // done: 将连字符分隔的字符串驼峰化，例如：background-color --> backgroundColor
+  // done: 从数组中删除一个项
+  function remove(arr, item) {
+    if (arr.length) {
+      const index = arr.indexOf(item);
+
+      if (index > -1) {
+        return arr.splice(index, 1);
+      }
+    }
+  } // done: 获取值的原始类型字符串，例如，[object object]。
+
+  const _toString = Object.prototype.toString; // done: 严格的对象类型检查。
+  // 仅对普通 JavaScript 对象返回 true。
+
+  function isPlainObject(obj) {
+    return _toString.call(obj) === '[object Object]';
+  } // done: 检查对象是否具有该属性
+
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+  function hasOwn(obj, key) {
+    return hasOwnProperty.call(obj, key);
+  } // done:: 是否存在 __proto__
+
+  const hasProto = ('__proto__' in {}); // done: 将连字符分隔的字符串驼峰化，例如：background-color --> backgroundColor
 
   const camelizeRE = /-(\w)/g;
   const camelize = cached(str => {
-    return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : "");
+    return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : '');
   }); // done: 用连字符连接驼峰字符串
 
   const hyphenateRE = /\B([A-Z])/g;
   const hyphenate = cached(str => {
-    return str.replace(hyphenateRE, "-$1").toLowerCase();
+    return str.replace(hyphenateRE, '-$1').toLowerCase();
   }); // done: 定义一个属性
 
   function def(obj, key, val, enumerable) {
@@ -42,7 +64,7 @@
   } // done: 对象检测
 
   function isObject(obj) {
-    return obj !== null && typeof obj === "object";
+    return obj !== null && typeof obj === 'object';
   } // done: 将对象数组合并为单个对象
 
   function toObject(arr) {
@@ -73,9 +95,10 @@
     };
   } // done: 判断 Symbol 和 Reflect 是否都存在
 
-  const hasSymbol = typeof Symbol !== "undefined" && isNative(Symbol) && typeof Reflect !== "undefined" && isNative(Reflect.ownKeys);
+  const hasSymbol = typeof Symbol !== 'undefined' && isNative(Symbol) && typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys); // done: native 代码实现的 built-in 函数 
+
   function isNative(Ctor) {
-    return typeof Ctor === "function" && /native code/.test(Ctor.toString());
+    return typeof Ctor === 'function' && /native code/.test(Ctor.toString());
   } // done: 参数等于 undefined 或 null
 
   function isUndef(v) {
@@ -87,24 +110,107 @@
   } // done: 检查 value 是否为原始值
 
   function isPrimitive(value) {
-    return typeof value === "string" || typeof value === "number" || typeof value === "symbol" || typeof value === "boolean";
+    return typeof value === 'string' || typeof value === 'number' || typeof value === 'symbol' || typeof value === 'boolean';
   } // done: 制作一个映射，并返回一个函数来检查键是否在该映射中。
 
   function makeMap(str, expectsLowerCase) {
     const map = Object.create(null);
-    const list = str.split(",");
+    const list = str.split(',');
 
     for (let i = 0; i < list.length; i++) {
       map[list[i]] = true;
     }
 
     return expectsLowerCase ? val => map[val.toLowerCase()] : val => map[val];
-  }
+  } // done: 真
+
   function isTrue(v) {
     return v === true;
-  }
+  } // done: 假
+
   function isFalse(v) {
     return v === false;
+  }
+  /**
+    done: 在JavaScript中，您可以使用比函数预期更多的参数来调用函数。
+   (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+   */
+
+  function noop(a, b, c) {} // done: 错误提示
+
+  const _Set = function () {
+    function Set() {
+      this.set = Object.create(null);
+    }
+
+    Set.prototype.has = function has(key) {
+      return this.set[key] === true;
+    };
+
+    Set.prototype.add = function add(key) {
+      this.set[key] = true;
+    };
+
+    Set.prototype.clear = function clear() {
+      this.set = Object.create(null);
+    };
+
+    return Set;
+  }();
+
+  let uid$1 = 0;
+  /**
+   * dep 是一个存储可观察对象的对象（俗称订阅器）。
+   */
+
+  class Dep {
+    static target;
+
+    constructor() {
+      this.id = uid$1++;
+      this.subs = [];
+    } // 添加
+
+
+    addSub(sub) {
+      this.subs.push(sub);
+    } // 删除
+
+
+    removeSub(sub) {
+      remove(this.subs, sub);
+    } // 添加依赖项
+
+
+    depend() {
+      if (Dep.target) {
+        Dep.target.addDep(this);
+      }
+    } // 通知更新
+
+
+    notify() {
+      // 考虑到数据安全和稳定性，这里获取订阅列表的一个副本
+      const subs = this.subs.slice();
+
+      for (let i = 0, l = subs.length; i < l; i++) {
+        console.log('通知更新--->notify', subs[i]);
+        subs[i].update(); // 更新
+      }
+    }
+
+  } // 当前正在处理的目标监视器。
+  // 因为同一时间，只有一个监视器可以被计算，所以这是全局唯一的，
+
+  Dep.target = null;
+  const targetStack = [];
+  function pushTarget(target) {
+    targetStack.push(target);
+    Dep.target = target;
+  }
+  function popTarget() {
+    targetStack.pop();
+    Dep.target = targetStack[targetStack.length - 1];
   }
 
   const methodsToPatch = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
@@ -172,16 +278,36 @@
     // }
   });
 
-  // import observeArray from './observeArray';
-  const arrayKeys = Object.getOwnPropertyNames(arrayMethods);
-  function observe(val) {
-    // 检查 val 是否为对象（注意：在 js 中，数组也是对象，isObject并不排除数组）。
-    if (!isObject(val)) return;
-    return new Observer(val);
-  }
+  const arrayKeys = Object.getOwnPropertyNames(arrayMethods); // done: 尝试为某个值创建一个观察实例，
+  // 如果成功地观察到，返回新的观察者，如果值已经有观察者，则返回现有的观察者。
+
+  function observe(value, asRootData) {
+    // 检查 value 是否为对象（注意：在 js 中，数组也是对象，isObject 方法并不排除数组）。
+    if (!isObject(value)) return;
+    let ob; // 检查对象是否具有 '__ob__' 属性且是一个观察者实例
+
+    if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+      ob = value.__ob__; // 返回现有的观察实例
+    } else if ( // isPlainObject 判断值是否是普通对象，指其原始类型字符串是不是 [object object]
+    (Array.isArray(value) || isPlainObject(value)) && // Object.isExtensible() 方法判断一个对象是否是可扩展的（是否可以在它上面添加新的属性）。
+    Object.isExtensible(value) && // _isVue 是一个要被观察的标志
+    !value._isVue) {
+      ob = new Observer(value); // 返回新的观察实例
+    }
+
+    if (asRootData && ob) {
+      ob.vmCount++; // 记录实例个数
+    }
+
+    return ob;
+  } // done: 附加到每个被观察对象的观察者类。
+  // 一旦附加，观察者将目标对象的属性键转换为收集依赖项和分派更新的 getter/setter。
+
   class Observer {
     constructor(value) {
-      this.value = value; // 为当前 value 定义 __ob__ 属性，其值为 this（即当前 Observer 类）
+      this.value = value;
+      this.dep = new Dep();
+      this.vmCount = 0; // 为当前 value 定义 __ob__ 属性，其值为 this（即当前 Observer 类）
 
       def(value, '__ob__', this);
 
@@ -199,7 +325,8 @@
         // 观察对象（Object)
         this.walk(value);
       }
-    } // 遍历所有属性并将它们转换为 getter/setter。仅当值类型为 Object 时才应调用此方法
+    } // done: 遍历所有属性并将它们转换为 getter/setter。
+    // 仅当值类型为 Object 时才应调用此方法
 
 
     walk(obj) {
@@ -212,7 +339,7 @@
 
         defineReactive(obj, key, value);
       }
-    } // 观察数组（Array）的每一项
+    } // done: 观察数组（Array）的每一项
 
 
     observeArray(items) {
@@ -221,25 +348,76 @@
       }
     }
 
-  }
+  } // done: 定义响应式属性
 
-  function defineReactive(data, key, value) {
-    // 递归观察，value可能是一个对象
-    observe(value); // Object.defineProperty() 方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象。
+  function defineReactive(obj, key, val, customSetter, shallow) {
+    // 创建订阅器
+    const dep = new Dep(); // Object.getOwnPropertyDescriptor 方法返回指定对象上一个自有属性对应的属性描述符（自有属性指的是
+    // 直接赋予该对象的属性，不需要从原型链上进行查找的属性）。
+
+    const property = Object.getOwnPropertyDescriptor(obj, key); // 属性存在且不可配置，则阻止运行
+
+    if (property && property.configurable === false) {
+      return;
+    } // 预定义 getter/setter
+
+
+    const getter = property && property.get;
+    const setter = property && property.set;
+
+    if ((!getter || setter) && arguments.length === 2) {
+      val = obj[key];
+    } // 递归观察 val, 它可能是一个对象（shallow，控制是否递归）
+
+
+    let childOb = !shallow && observe(val); // Object.defineProperty() 方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象。
     // 它是实现数据劫持的关键所在。
 
-    Object.defineProperty(data, key, {
+    Object.defineProperty(obj, key, {
+      enumerable: true,
+      configurable: true,
       get: function reactiveGetter() {
-        //   console.log('获取', value);
+        const value = getter ? getter.call(obj) : val; // Dep.target 目标监视器
+
+        if (Dep.target) {
+          // 添加到订阅器
+          dep.depend(); // 子观察实例
+
+          if (childOb) {
+            childOb.dep.depend();
+
+            if (Array.isArray(value)) {
+              dependArray(value); // 收集数组元素上的依赖项
+            }
+          }
+        }
+
         return value;
       },
-      set: function reactiveSetter(newValue) {
-        //   console.log('设置', newValue);
-        if (newValue === value) return; // 同名属性，不需要重新赋值或观察
+      set: function reactiveSetter(newVal) {
+        const value = getter ? getter.call(obj) : val; // 同名属性，不需要重新赋值或观察
 
-        observe(value); // 递归观察，value可能是一个对象
+        if (newVal === value || newVal !== newVal && value !== value) {
+          return;
+        } // 自定义setter
 
-        value = newValue;
+
+        if (customSetter) {
+          customSetter();
+        } // 对于没有 setter 的访问器属性，则阻止运行
+
+
+        if (getter && !setter) return;
+
+        if (setter) {
+          setter.call(obj, newVal);
+        } else {
+          val = newVal;
+        } // 递归观察 newVal，它可能是一个对象
+
+
+        childOb = !shallow && observe(newVal);
+        dep.notify(); // 通知更新
       }
     });
   } // done: 通过使用 __proto__ 截取原型链来增加目标对象或数组
@@ -255,20 +433,23 @@
       const key = keys[i];
       def(target, key, src[key]);
     }
-  } // // 遍历所有属性并将它们转换为 getter/setter。仅当值类型为 Object 时才应调用此方法
-  // Observer.prototype.walk = function (data) {
-  //     // Object.keys() 方法会返回一个由一个给定对象的自身可枚举属性组成的数组，
-  //     // 数组中属性名的排列顺序和正常循环遍历该对象时返回的顺序一致 。
-  //     const keys = Object.keys(data);
-  //     for (let i = 0; i < keys.length; i++) {
-  //         const key = keys[i]; // 属性
-  //         const value = data[key]; // 属性值
-  //         // 在对象上定义一个反应性属性
-  //         defineReactive(data, key, value);
-  //     }
-  // }
+  } // 当数组被接触时，收集数组元素上的依赖项，因为我们不能像属性getter那样截取数组元素访问。
+
+
+  function dependArray(value) {
+    for (let e, i = 0, l = value.length; i < l; i++) {
+      e = value[i];
+      e && e.__ob__ && e.__ob__.dep.depend();
+
+      if (Array.isArray(e)) {
+        dependArray(e); // 递归
+      }
+    }
+  }
 
   function initState(vm) {
+    vm._watchers = []; // 监听者列表
+
     const options = vm.$options;
 
     if (options.data) {
@@ -290,19 +471,310 @@
     observe(vm.$data);
   }
 
-  // 挂载组件
-  function mountComponent(vm) {
-    // vm._render() 返回虚拟节点 vnode
-    vm._update(vm._render()); // 更新组件
+  // import { handleError } from './error'
+  const callbacks = [];
+  let pending = false;
 
+  function flushCallbacks() {
+    pending = false;
+    const copies = callbacks.slice(0);
+    callbacks.length = 0;
+
+    for (let i = 0; i < copies.length; i++) {
+      // console.log('flushCallbacks--->执行', copies[i]);
+      copies[i]();
+    }
+  }
+
+  let timerFunc; // 若 Promise 不存在，则使用 setTimeout
+
+  if (typeof Promise !== 'undefined' && isNative(Promise)) {
+    // console.log('Promise---->存在吗');
+    const p = Promise.resolve();
+
+    timerFunc = () => {
+      p.then(flushCallbacks);
+    };
+  } else {
+    timerFunc = () => {
+      setTimeout(flushCallbacks, 0);
+    };
+  }
+
+  function nextTick(cb, ctx) {
+    let _resolve;
+
+    callbacks.push(() => {
+      if (cb) {
+        try {
+          cb.call(ctx);
+        } catch (e) {
+          throw e;
+        }
+      } else if (_resolve) {
+        _resolve(ctx);
+      }
+    });
+
+    if (!pending) {
+      pending = true;
+      console.log('timerFunc----->是什么', timerFunc);
+      timerFunc();
+    }
+
+    if (!cb && typeof Promise !== 'undefined') {
+      return new Promise(resolve => {
+        _resolve = resolve;
+      });
+    }
+  }
+
+  const queue = []; // 监视者队列
+  let has = {};
+  let waiting = false;
+  let flushing = false;
+  let index = 0;
+  /**
+   * 重置调度程序的状态。
+   */
+
+  function resetSchedulerState() {
+    index = queue.length = 0;
+    has = {};
+    waiting = flushing = false;
+  }
+  /**
+   * 刷新队列并运行监视器。
+   */
+
+
+  function flushSchedulerQueue() {
+    flushing = true;
+    let watcher, id; // 刷新队列前的排序，是为确保:
+    // 1. 组件从父组件更新到子组件（因为父组件总是在子组件之前创建）。
+    // 2. 组件的用户监视器在它的呈现监视器之前运行（因为用户观察者在渲染观察者之前创建）。
+    // 3. 如果一个组件在父组件的监视程序运行期间被销毁，它的观察者可以被跳过。
+
+    queue.sort((a, b) => a.id - b.id); // 不要缓存长度，因为当我们运行现有的监视器时，可能会有更多的监视器被推送
+
+    for (index = 0; index < queue.length; index++) {
+      watcher = queue[index];
+      id = watcher.id;
+      has[id] = null;
+      watcher.run();
+    } // 重置
+
+
+    resetSchedulerState();
+  }
+  /**
+   * 将一个监视者推入监视者队列。
+   * 具有重复 id 的作业将被跳过，除非它是刷新队列时推入。
+   */
+
+
+  function queueWatcher(watcher) {
+    const id = watcher.id;
+
+    if (has[id] == null) {
+      has[id] = true;
+
+      if (!flushing) {
+        queue.push(watcher);
+      } else {
+        // 如果已经刷新，则根据其id拼合监视器
+        // 如果已经超过了它的id，它将立即运行下一步。
+        let i = queue.length - 1;
+
+        while (i > index && queue[i].id > watcher.id) {
+          i--;
+        }
+
+        queue.splice(i + 1, 0, watcher); // 添加到队列
+      } // 刷新队列
+
+
+      if (!waiting) {
+        waiting = true;
+        nextTick(flushSchedulerQueue);
+      }
+    }
+  }
+
+  let uid = 0;
+  /**
+   * 监视器，收集依赖项，并在表达式值发生变化时触发回调。这用于 $watch() api 和指令。
+   */
+
+  class Watcher {
+    constructor(vm, expOrFn, cb, options, isRenderWatcher) {
+      this.vm = vm;
+
+      if (isRenderWatcher) {
+        vm._watcher = this;
+      }
+
+      vm._watchers.push(this);
+
+      this.cb = cb;
+      this.id = ++uid;
+      this.deps = [];
+      this.newDeps = [];
+      this.depIds = new _Set(); // 用于判断dep是否已存在
+
+      this.newDepIds = new _Set();
+      this.getter = expOrFn;
+      this.value = this.get();
+    }
+    /**
+     * 获取值并收集依赖项。
+     */
+
+
+    get() {
+      pushTarget(this); // 添加监视器到栈中并设置为当前正在处理的目标监视器
+
+      let value;
+      const vm = this.vm;
+
+      try {
+        value = this.getter.call(vm, vm);
+      } catch (e) {
+        throw e;
+      } finally {
+        popTarget(); // 移除目标监视器
+
+        this.cleanupDeps(); // 清理依赖项集合。
+      }
+
+      return value;
+    }
+    /**
+     * 添加依赖项
+     */
+
+
+    addDep(dep) {
+      const id = dep.id; // 根据id，判断依赖项是否已存在
+
+      if (!this.newDepIds.has(id)) {
+        this.newDepIds.add(id);
+        this.newDeps.push(dep);
+
+        if (!this.depIds.has(id)) {
+          dep.addSub(this);
+        }
+      }
+    }
+    /**
+     * 清理依赖项集合。
+     */
+
+
+    cleanupDeps() {
+      let i = this.deps.length;
+
+      while (i--) {
+        const dep = this.deps[i];
+
+        if (!this.newDepIds.has(dep.id)) {
+          dep.removeSub(this); // 删除
+        }
+      }
+
+      let tmp = this.depIds;
+      this.depIds = this.newDepIds;
+      this.newDepIds = tmp;
+      this.newDepIds.clear();
+      tmp = this.deps;
+      this.deps = this.newDeps;
+      this.newDeps = tmp;
+      this.newDeps.length = 0;
+    }
+    /**
+     * 订阅接口。
+     * 将在依赖项更改时调用。
+     */
+
+
+    update() {
+      queueWatcher(this);
+    }
+    /**
+     * 调度程序作业接口。
+     * 将被调度程序调用。
+     */
+
+
+    run() {
+      const value = this.get();
+
+      if (value !== this.value || // 即使值相同，深层监视器和对象/数组上的监视器也应该触发，因为值可能已经发生了变化。
+      isObject(value)) {
+        // 设置新的值
+        const oldValue = this.value;
+        this.value = value;
+        this.cb.call(this.vm, value, oldValue);
+      }
+    }
+    /**
+     * 依赖当前观察者收集的所有数据.
+     */
+
+
+    depend() {
+      let i = this.deps.length;
+
+      while (i--) {
+        this.deps[i].depend();
+      }
+    }
+
+  }
+
+  let updateComponent; // 挂载组件
+
+  function mountComponent(vm) {
+    // 更新组件
+    updateComponent = () => {
+      // 将 vm._render() 返回的 vnode 虚拟节点对象传递给 vm._update，它会调用 patch 函数生成文档树
+      vm._update(vm._render());
+    };
+
+    new Watcher(vm, updateComponent, noop, {}, true
+    /* isRenderWatcher */
+    );
   }
   function lifecycleMixin(Vue) {
     // 挂载 _update() 更新函数
     Vue.prototype._update = function (vnode) {
       const vm = this;
-      console.log('_update--->执行', vm.$el, vnode); // 将 vnode 虚拟节点生成相应的 HTML 元素
+      console.log('_update--->执行', vm.$el, vnode);
+      const prevEl = vm.$el;
+      const prevVnode = vm._vnode;
+      vm._vnode = vnode; // 将 vnode 虚拟节点生成相应的 HTML 元素
 
-      vm.__patch__(vm.$el, vnode);
+      if (!prevVnode) {
+        // 初始化
+        vm.$el = vm.__patch__(vm.$el, vnode);
+      } else {
+        // 更新
+        vm.$el = vm.__patch__(prevVnode, vnode);
+      } // 更新 __vue__ 引用
+
+
+      if (prevEl) {
+        prevEl.__vue__ = null;
+      }
+
+      if (vm.$el) {
+        vm.$el.__vue__ = vm;
+      } // 更新 vm.$parent.$el
+
+
+      if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+        vm.$parent.$el = vm.$el;
+      }
     };
   }
 
@@ -1592,7 +2064,7 @@
   const importantRE = /\s*!important$/;
 
   const setProp = (el, name, val) => {
-    // cssVarRE 是针对使用 了CSS 自定义属性（变量）的情况，例如：element { color: var(--bg-color);}
+    // cssVarRE 正则，是针对使用 了CSS 自定义属性（变量）的情况，例如：element { color: var(--bg-color);}
     // 相关文档：https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties
     if (cssVarRE.test(name)) {
       el.style.setProperty(name, val);
@@ -1704,7 +2176,9 @@
       const vm = this; // 存储 this（ Vue实例 ）
 
       vm.$options = options; // 将 options 挂载到 vm 上，以便后续使用
-      // Vue 实例中的 data、 props、methods、computed 和 watch，都会在 initState 函数中
+      // 一个避免被观察的标志
+
+      vm._isVue = true; // Vue 实例中的 data、 props、methods、computed 和 watch，都会在 initState 函数中
       // 进行初始化。由于我们主要解说：Vue 数据劫持，所以只对 data 进行处理。
 
       initState(vm);
