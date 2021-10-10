@@ -13,12 +13,13 @@
     <script src="dist/umd/vue.js"></script>
   </head>
 
-  <!-- <div v-for="(item, index) in students" :key="item.id">
-        {{ item.name }}
-      </div> -->
+ 
   <body>
     <div id="app">
-      <div :class="classObject">姓名：{{ students[0].name }}</div>
+      <div :class="classObject">姓名：{{ name }}</div>
+       <div v-for="(item, index) in students" :key="item.id">
+        {{ item.name }}
+      </div>
     </div>
 
     <script>
@@ -40,7 +41,13 @@
           };
         },
       });
-      // vm.students[0].name = '优秀';
+      // vm.students.push(
+      //   {
+      //     id: 2,
+      //     name: '哈哈'
+      //   }
+      // )
+      vm.name = '回事'
     </script>
   </body>
 </html>

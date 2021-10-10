@@ -32,16 +32,10 @@ export function createPatchFunction(backend) {
             }
         }
     }
-    
+
     // done: 创建虚拟节点对象
     function emptyNodeAt(elm) {
-        const node = new VNode(
-            nodeOps.tagName(elm).toLowerCase(),
-            {},
-            [],
-            undefined,
-            elm
-        );
+        const node = new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm);
         return node;
     }
     // done: 调用 cbs.create 数组中函数(主要用于处理 class、style、指令等)
@@ -74,7 +68,6 @@ export function createPatchFunction(backend) {
         // 元素节点
         if (isDef(tag)) {
             vnode.elm = nodeOps.createElement(tag, vnode);
-            // console.log('元素节点------>', vnode);
             // 创建子元素
             createChildren(vnode, children, insertedVnodeQueue);
             if (isDef(data)) {
@@ -85,34 +78,30 @@ export function createPatchFunction(backend) {
             insert(parentElm, vnode.elm, refElm);
         } else {
             // 纯文本节点
-            // console.log('文本节点------>', vnode);
             vnode.elm = nodeOps.createTextNode(vnode.text);
             insert(parentElm, vnode.elm, refElm);
         }
     }
+    // done: 验证 vnode.tag（标签）是否存在
+    function isPatchable(vnode) {
+        while (vnode.componentInstance) {
+            vnode = vnode.componentInstance._vnode;
+        }
+        return isDef(vnode.tag);
+    }
 
-    // DONE 创建子元素
+    // done: 创建子元素
     function createChildren(vnode, children, insertedVnodeQueue) {
         if (Array.isArray(children)) {
             // 检查 children 中的子节点是否有重复的 key 值
             checkDuplicateKeys(children);
 
             for (let i = 0; i < children.length; ++i) {
-                createElm(
-                    children[i],
-                    insertedVnodeQueue,
-                    vnode.elm,
-                    null,
-                    true,
-                    children,
-                    i
-                );
+                createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i);
             }
-        } else if (isPrimitive(vnode.text)) { // 是否为原始值
-            nodeOps.appendChild(
-                vnode.elm,
-                nodeOps.createTextNode(vnode.text)
-            );
+        } else if (isPrimitive(vnode.text)) {
+            // 是否为原始值
+            nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(vnode.text));
         }
     }
 
@@ -170,6 +159,52 @@ export function createPatchFunction(backend) {
             nodeOps.removeChild(parent, el);
         }
     }
+    // done: 同一个 vnode
+    function sameVnode(a, b) {
+        return a.key === b.key && a.tag === b.tag && isDef(a.data) === isDef(b.data);
+    }
+
+    function patchVnode(oldVnode, vnode, insertedVnodeQueue, ownerArray, index, removeOnly) {
+        // 新旧节点相同，则阻止运行
+        if (oldVnode === vnode) {
+            return;
+        }
+
+        const elm = (vnode.elm = oldVnode.elm);
+
+        let i;
+        const data = vnode.data;
+        const oldCh = oldVnode.children;
+        const ch = vnode.children;
+
+        // vnode 中的 data 和 tag 属性同时为真，则对其属性（class、style等）进行更新
+        if (isDef(data) && isPatchable(vnode)) {
+            for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode);
+            //   if (isDef((i = data.hook)) && isDef((i = i.update))) i(oldVnode, vnode);
+        }
+
+        if (isUndef(vnode.text)) {
+            if (isDef(oldCh) && isDef(ch)) {
+                if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly);
+            } else if (isDef(ch)) {
+                if (process.env.NODE_ENV !== 'production') {
+                    checkDuplicateKeys(ch);
+                }
+                if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '');
+                addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
+            } else if (isDef(oldCh)) {
+                removeVnodes(oldCh, 0, oldCh.length - 1);
+            } else if (isDef(oldVnode.text)) {
+                nodeOps.setTextContent(elm, '');
+            }
+        } else if (oldVnode.text !== vnode.text) {
+            nodeOps.setTextContent(elm, vnode.text);
+        }
+        
+        if (isDef(data)) {
+            if (isDef((i = data.hook)) && isDef((i = i.postpatch))) i(oldVnode, vnode);
+        }
+    }
 
     /**
      * DONE 将 vnode 虚拟节点生成相应的 HTML 元素
@@ -177,9 +212,9 @@ export function createPatchFunction(backend) {
      * @param { Object } vnode => 虚拟节点对象
      */
     return function patch(oldVnode, vnode) {
-        console.log("path---->执行", oldVnode, vnode);
+        console.log('path---->执行', oldVnode, vnode);
 
-        const insertedVnodeQueue = [];
+        const insertedVnodeQueue = []; // 存储已插入的 vnode 的队列
 
         // 老节点不存在
         if (isUndef(oldVnode)) {
@@ -190,30 +225,33 @@ export function createPatchFunction(backend) {
             // 是否为真实元素
             const isRealElement = isDef(oldVnode.nodeType);
 
-            if (isRealElement) {
-                // 创建空节点对象（初始化部分数据）
-                oldVnode = emptyNodeAt(oldVnode);
-            }
+            // if (!isRealElement && sameVnode(oldVnode, vnode)) {
+                // // 修补现有的根节点
+                // patchVnode(oldVnode, vnode);
+            // } else {
+                if (isRealElement) {
+                    // 创建一个空节点替换 oldVnode
+                    oldVnode = emptyNodeAt(oldVnode);
+                }
+                // 替换现有的 element
+                const oldElm = oldVnode.elm;
+                const parentElm = nodeOps.parentNode(oldElm); // 获取 oldElm 父元素
 
-            // 替换现有的 element
-            const oldElm = oldVnode.elm;
-            const parentElm = nodeOps.parentNode(oldElm); // 获取 oldElm 父元素
+                // 创建新节点
+                createElm(
+                    vnode,
+                    insertedVnodeQueue,
+                    parentElm,
+                    // 返回紧跟 oldElm 之后的元素
+                    nodeOps.nextSibling(oldElm)
+                );
 
-            // 创建新节点
-            createElm(
-                vnode,
-                insertedVnodeQueue,
-                parentElm,
-                // 返回紧跟 oldElm 之后的元素
-                nodeOps.nextSibling(oldElm)
-            );
-
-            // 销毁旧节点
-            if (isDef(parentElm)) {
-                console.log('执行销毁操作--->', oldVnode);
-                removeVnodes([oldVnode], 0, 0);
-            }
-
+                // 销毁旧节点
+                if (isDef(parentElm)) {
+                    console.log('执行销毁操作--->', oldVnode);
+                    removeVnodes([oldVnode], 0, 0);
+                }
+            // }
         }
 
         return vnode.elm;

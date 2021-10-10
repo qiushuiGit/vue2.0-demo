@@ -113,7 +113,7 @@ function defineReactive(obj, key, val, customSetter, shallow) {
     configurable: true,
     get: function reactiveGetter() {
       const value = getter ? getter.call(obj) : val;
-      // Dep.target 目标监视器
+      // Dep.target 当前目标订阅者
       if (Dep.target) {
         // 添加到订阅器
         dep.depend(); 

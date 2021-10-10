@@ -199,8 +199,8 @@
       }
     }
 
-  } // 当前正在处理的目标监视器。
-  // 因为同一时间，只有一个监视器可以被计算，所以这是全局唯一的，
+  } // 当前正在处理的目标订阅者。
+  // 由于同一时间，只有一个订阅者可以被计算，所以这应是全局唯一的，
 
   Dep.target = null;
   const targetStack = [];
@@ -377,7 +377,7 @@
       enumerable: true,
       configurable: true,
       get: function reactiveGetter() {
-        const value = getter ? getter.call(obj) : val; // Dep.target 目标监视器
+        const value = getter ? getter.call(obj) : val; // Dep.target 当前目标订阅者
 
         if (Dep.target) {
           // 添加到订阅器
@@ -448,7 +448,7 @@
   }
 
   function initState(vm) {
-    vm._watchers = []; // 监听者列表
+    vm._watchers = []; // 订阅者列表
 
     const options = vm.$options;
 
@@ -529,13 +529,13 @@
     }
   }
 
-  const queue = []; // 监视者队列
+  const queue = []; // 订阅队列
   let has = {};
   let waiting = false;
   let flushing = false;
   let index = 0;
   /**
-   * 重置调度程序的状态。
+   * 重置 Scheduler（调度器）的状态。
    */
 
   function resetSchedulerState() {
@@ -544,7 +544,7 @@
     waiting = flushing = false;
   }
   /**
-   * 刷新队列并运行监视器。
+   * 刷新队列并调用 watcher.run。
    */
 
 
@@ -552,10 +552,10 @@
     flushing = true;
     let watcher, id; // 刷新队列前的排序，是为确保:
     // 1. 组件从父组件更新到子组件（因为父组件总是在子组件之前创建）。
-    // 2. 组件的用户监视器在它的呈现监视器之前运行（因为用户观察者在渲染观察者之前创建）。
-    // 3. 如果一个组件在父组件的监视程序运行期间被销毁，它的观察者可以被跳过。
+    // 2. 组件的 watcher 在它提供之前运行（因为使用的 watcher 在渲染之前创建）。
+    // 3. 如果一个组件在父组件的监视程序运行期间被销毁，它的 watcher 可以被跳过。
 
-    queue.sort((a, b) => a.id - b.id); // 不要缓存长度，因为当我们运行现有的监视器时，可能会有更多的监视器被推送
+    queue.sort((a, b) => a.id - b.id); // 不要缓存长度，因为当我们运行现有的 watcher 时，可能会有更多的 watcher 被推送
 
     for (index = 0; index < queue.length; index++) {
       watcher = queue[index];
@@ -568,7 +568,7 @@
     resetSchedulerState();
   }
   /**
-   * 将一个监视者推入监视者队列。
+   * 将一个订阅者者推入订阅队列。
    * 具有重复 id 的作业将被跳过，除非它是刷新队列时推入。
    */
 
@@ -582,7 +582,7 @@
       if (!flushing) {
         queue.push(watcher);
       } else {
-        // 如果已经刷新，则根据其id拼合监视器
+        // 如果已经刷新，则根据其 id 拼接订阅队列
         // 如果已经超过了它的id，它将立即运行下一步。
         let i = queue.length - 1;
 
@@ -603,7 +603,7 @@
 
   let uid = 0;
   /**
-   * 监视器，收集依赖项，并在表达式值发生变化时触发回调。这用于 $watch() api 和指令。
+   * 订阅者，收集依赖项，并在表达式值发生变化时触发回调。这用于 $watch() api 和指令。
    */
 
   class Watcher {
@@ -632,7 +632,7 @@
 
 
     get() {
-      pushTarget(this); // 添加监视器到栈中并设置为当前正在处理的目标监视器
+      pushTarget(this); // 添加订阅者到栈中并设置为当前正在处理的订阅者
 
       let value;
       const vm = this.vm;
@@ -642,7 +642,7 @@
       } catch (e) {
         throw e;
       } finally {
-        popTarget(); // 移除目标监视器
+        popTarget(); // 移除当前订阅者
 
         this.cleanupDeps(); // 清理依赖项集合。
       }
@@ -692,7 +692,7 @@
       this.newDeps.length = 0;
     }
     /**
-     * 订阅接口。
+     * 订阅更新接口。
      * 将在依赖项更改时调用。
      */
 
@@ -701,15 +701,15 @@
       queueWatcher(this);
     }
     /**
-     * 调度程序作业接口。
-     * 将被调度程序调用。
+     * Scheduler（调度器）作业接口。
+     * 将被 scheduler 调用。
      */
 
 
     run() {
       const value = this.get();
 
-      if (value !== this.value || // 即使值相同，深层监视器和对象/数组上的监视器也应该触发，因为值可能已经发生了变化。
+      if (value !== this.value || // 即使值相同，对象/数组上的订阅也应该触发，因为值可能已经发生了变化。
       isObject(value)) {
         // 设置新的值
         const oldValue = this.value;
@@ -1714,8 +1714,7 @@
       // 元素节点
 
       if (isDef(tag)) {
-        vnode.elm = nodeOps.createElement(tag, vnode); // console.log('元素节点------>', vnode);
-        // 创建子元素
+        vnode.elm = nodeOps.createElement(tag, vnode); // 创建子元素
 
         createChildren(vnode, children, insertedVnodeQueue);
 
@@ -1728,11 +1727,10 @@
         insert(parentElm, vnode.elm, refElm);
       } else {
         // 纯文本节点
-        // console.log('文本节点------>', vnode);
         vnode.elm = nodeOps.createTextNode(vnode.text);
         insert(parentElm, vnode.elm, refElm);
       }
-    } // DONE 创建子元素
+    } // done: 验证 vnode.tag（标签）是否存在
 
 
     function createChildren(vnode, children, insertedVnodeQueue) {
@@ -1802,7 +1800,7 @@
       if (isDef(parent)) {
         nodeOps.removeChild(parent, el);
       }
-    }
+    } // done: 同一个 vnode
     /**
      * DONE 将 vnode 虚拟节点生成相应的 HTML 元素
      * @param { HTMLDivElement } oldVnode => html
@@ -1811,15 +1809,19 @@
 
 
     return function patch(oldVnode, vnode) {
-      console.log("path---->执行", oldVnode, vnode);
-      const insertedVnodeQueue = []; // 老节点不存在
+      console.log('path---->执行', oldVnode, vnode);
+      const insertedVnodeQueue = []; // 存储已插入的 vnode 的队列
+      // 老节点不存在
 
       if (isUndef(oldVnode)) ; else {
         // 是否为真实元素
-        const isRealElement = isDef(oldVnode.nodeType);
+        const isRealElement = isDef(oldVnode.nodeType); // if (!isRealElement && sameVnode(oldVnode, vnode)) {
+        // // 修补现有的根节点
+        // patchVnode(oldVnode, vnode);
+        // } else {
 
         if (isRealElement) {
-          // 创建空节点对象（初始化部分数据）
+          // 创建一个空节点替换 oldVnode
           oldVnode = emptyNodeAt(oldVnode);
         } // 替换现有的 element
 
@@ -1834,7 +1836,8 @@
         if (isDef(parentElm)) {
           console.log('执行销毁操作--->', oldVnode);
           removeVnodes([oldVnode], 0, 0);
-        }
+        } // }
+
       }
 
       return vnode.elm;

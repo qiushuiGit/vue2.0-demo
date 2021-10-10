@@ -6,7 +6,7 @@ import { pushTarget, popTarget } from './dep';
 let uid = 0;
 
 /**
- * 监视器，收集依赖项，并在表达式值发生变化时触发回调。这用于 $watch() api 和指令。
+ * 订阅者，收集依赖项，并在表达式值发生变化时触发回调。这用于 $watch() api 和指令。
  */
 export default class Watcher {
   constructor(vm, expOrFn, cb, options, isRenderWatcher) {
@@ -32,7 +32,7 @@ export default class Watcher {
    * 获取值并收集依赖项。
    */
   get() {
-    pushTarget(this); // 添加监视器到栈中并设置为当前正在处理的目标监视器
+    pushTarget(this); // 添加订阅者到栈中并设置为当前正在处理的订阅者
     let value;
     const vm = this.vm;
     try {
@@ -40,7 +40,7 @@ export default class Watcher {
     } catch (e) {
       throw e;
     } finally {
-      popTarget(); // 移除目标监视器
+      popTarget(); // 移除当前订阅者
       this.cleanupDeps(); // 清理依赖项集合。
     }
 
@@ -86,7 +86,7 @@ export default class Watcher {
   }
 
   /**
-   * 订阅接口。
+   * 订阅更新接口。
    * 将在依赖项更改时调用。
    */
   update() {
@@ -94,14 +94,14 @@ export default class Watcher {
   }
 
   /**
-   * 调度程序作业接口。
-   * 将被调度程序调用。
+   * Scheduler（调度器）作业接口。
+   * 将被 scheduler 调用。
    */
   run() {
     const value = this.get();
     if (
       value !== this.value ||
-      // 即使值相同，深层监视器和对象/数组上的监视器也应该触发，因为值可能已经发生了变化。
+      // 即使值相同，对象/数组上的订阅也应该触发，因为值可能已经发生了变化。
       isObject(value)
     ) {
       // 设置新的值
