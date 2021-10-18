@@ -1,53 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vue-mini-demo</title>
-    <style>
-      .wu {
-        color: #a9813d;
-        font-size: 20px;
-      }
-    </style>
-    <script src="dist/umd/vue.js"></script>
-  </head>
 
- 
-  <body>
-    <div id="app">
-      <div :class="classObject">姓名：{{ name }}</div>
-       <div v-for="(item, index) in students" :key="item.id">
-        {{ item.name }}
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vue-mini-demo</title>
+  <style>
+    .wu {
+      color: #a9813d;
+      font-size: 20px;
+    }
+  </style>
+  <script src="dist/umd/vue.js"></script>
+</head>
+
+
+<body>
+  <div id="app">
+    <div :class="classObject">姓名：{{ name }}</div>
+    <div v-for="(item, index) in students" :key="item.id">
+      {{ item.name }}
     </div>
+  </div>
 
-    <script>
-      // 模板: render  >  template   >  html式模板
-      const vm = new Vue({
-        el: '#app',
-        data() {
-          return {
-            classObject: {
-              wu: true
+  <script>
+    // 模板: render  >  template   >  html式模板
+    const vm = new Vue({
+      el: '#app',
+      data() {
+        return {
+          classObject: {
+            wu: true
+          },
+          name: '文峰大道',
+          students: [
+            {
+              id: 1,
+              name: '小张',
             },
-            name: '文峰大道',
-            students: [
-              {
-                id: 1,
-                name: '小张',
-              },
-            ],
-          };
-        },
-      });
-      // vm.students.push(
-      //   {
-      //     id: 2,
-      //     name: '哈哈'
-      //   }
-      // )
-      vm.name = '回事'
-    </script>
-  </body>
+          ],
+        };
+      },
+    });
+   
+    setTimeout(() => {
+      vm.name = '更改'
+    }, 3000);
+  </script>
+</body>
+
 </html>
